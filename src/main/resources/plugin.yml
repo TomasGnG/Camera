@@ -1,0 +1,5 @@
+name: Camera
+version: '1.0.0'
+main: dev.tomasgng.Camera
+api-version: '1.21'
+authors: [ TomasGnG ]
