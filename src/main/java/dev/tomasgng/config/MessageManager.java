@@ -1,9 +1,8 @@
-package de.tomasgng.utils.config;
+package dev.tomasgng.config;
 
-import de.tomasgng.DynamicSeasons;
-import de.tomasgng.utils.config.pathproviders.MessagePathProvider;
-import de.tomasgng.utils.config.utils.ConfigExclude;
-import de.tomasgng.utils.config.utils.ConfigPair;
+import dev.tomasgng.Camera;
+import dev.tomasgng.config.utils.ConfigExclude;
+import dev.tomasgng.config.utils.ConfigPair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,8 +17,8 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class MessageManager {
-    private final File folder = new File("plugins/DynamicSeasons");
-    private final File configFile = new File("plugins/DynamicSeasons/messages.yml");
+    private final File folder = new File("plugins/Camera");
+    private final File configFile = new File("plugins/Camera/messages.yml");
 
     private YamlConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
     private final MiniMessage mm = MiniMessage.miniMessage();
@@ -182,7 +181,7 @@ public class MessageManager {
         try {
             return mm.deserialize(value);
         } catch (Exception e) {
-            DynamicSeasons.getInstance().getLogger().log(Level.WARNING, "The message {" + value + "} is not in MiniMessage format! Source (" + pair.getPath() + ")" + System.lineSeparator() + e.getMessage());
+            Camera.getInstance().getLogger().log(Level.WARNING, "The message {" + value + "} is not in MiniMessage format! Source (" + pair.getPath() + ")" + System.lineSeparator() + e.getMessage());
             return mm.deserialize(pair.getStringValue());
         }
     }

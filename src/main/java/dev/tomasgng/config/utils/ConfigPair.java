@@ -1,4 +1,4 @@
-package de.tomasgng.utils.config.utils;
+package dev.tomasgng.config.utils;
 
 import java.util.List;
 

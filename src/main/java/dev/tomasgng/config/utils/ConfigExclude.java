@@ -1,4 +1,4 @@
-package de.tomasgng.utils.config.utils;
+package dev.tomasgng.config.utils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
