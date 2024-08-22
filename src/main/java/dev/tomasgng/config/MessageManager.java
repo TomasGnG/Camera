@@ -18,10 +18,10 @@ import java.util.logging.Level;
 
 public class MessageManager {
     private final File folder = new File("plugins/Camera");
-    private final File configFile = new File("plugins/Camera/messages.yml");
-
-    private YamlConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
     private final MiniMessage mm = MiniMessage.miniMessage();
+
+    private File configFile = new File("plugins/Camera/messages.yml");
+    private YamlConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
 
     public MessageManager() {
         createFiles();
@@ -127,56 +127,32 @@ public class MessageManager {
     }
 
     public Object getObjectValue(ConfigPair pair) {
-        return getObject(pair);
-    }
-
-    public String getStringValue(ConfigPair pair) {
-        return getString(pair);
-    }
-
-    public boolean getBooleanValue(ConfigPair pair) {
-        return getBoolean(pair);
-    }
-
-    public int getIntegerValue(ConfigPair pair) {
-        return getInteger(pair);
-    }
-
-    public List<String> getStringListValue(ConfigPair pair) {
-        return getStringList(pair);
-    }
-
-    public Component getComponentValue(ConfigPair pair) {
-        return getMiniMessageComponent(pair);
-    }
-
-    private Object getObject(ConfigPair pair) {
         reload();
         return cfg.get(pair.getPath(), pair.getValue());
     }
 
-    private String getString(ConfigPair pair) {
+    public String getStringValue(ConfigPair pair) {
         reload();
         return cfg.getString(pair.getPath(), pair.getStringValue());
     }
 
-    private boolean getBoolean(ConfigPair pair) {
+    public boolean getBooleanValue(ConfigPair pair) {
         reload();
         return cfg.getBoolean(pair.getPath(), pair.getBooleanValue());
     }
 
-    private int getInteger(ConfigPair pair) {
+    public int getIntegerValue(ConfigPair pair) {
         reload();
         return cfg.getInt(pair.getPath(), pair.getIntegerValue());
     }
 
-    private List<String> getStringList(ConfigPair pair) {
+    public List<String> getStringListValue(ConfigPair pair) {
         reload();
         return cfg.getStringList(pair.getPath());
     }
 
-    private Component getMiniMessageComponent(ConfigPair pair) {
-        String value = getString(pair);
+    public Component getComponentValue(ConfigPair pair) {
+        String value = getStringValue(pair);
 
         try {
             return mm.deserialize(value);
@@ -184,6 +160,24 @@ public class MessageManager {
             Camera.getInstance().getLogger().log(Level.WARNING, "The message {" + value + "} is not in MiniMessage format! Source (" + pair.getPath() + ")" + System.lineSeparator() + e.getMessage());
             return mm.deserialize(pair.getStringValue());
         }
+    }
+
+    public void setLanguageFile(String name) {
+        if(name == null || name.isBlank()) {
+            Camera.getInstance().getLogger().severe("Error trying to set language file! Language file is null.");
+            return;
+        }
+
+        File langFile = new File(folder.getPath() + "/" + name);
+
+        if(!langFile.exists()) {
+            Camera.getInstance().getLogger().severe("The language file '" + langFile.getAbsolutePath() + "' doesn't exist.");
+            return;
+        }
+
+        configFile = langFile;
+
+
     }
 
     private void set(ConfigPair pair) {

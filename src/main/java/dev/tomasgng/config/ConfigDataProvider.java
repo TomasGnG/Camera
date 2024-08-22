@@ -1,6 +1,10 @@
 package dev.tomasgng.config;
 
 import dev.tomasgng.Camera;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import static dev.tomasgng.config.ConfigPathProvider.*;
 
 public class ConfigDataProvider {
 
@@ -18,6 +22,21 @@ public class ConfigDataProvider {
     }
 
     public String getCommandPermission() {
-        return manager.getStringValue(ConfigPathProvider.COMMAND_PERMISSION);
+        return manager.getStringValue(COMMAND_PERMISSION);
+    }
+
+    public String getLanguageFileName() {
+        return manager.getStringValue(LANGUAGE_FILE);
+    }
+
+    public Component getPlayerHeadDisplayname() {
+        final MiniMessage mm = MiniMessage.miniMessage();
+        String raw = manager.getStringValue(PLAYER_HEAD_DISPLAYNAME);
+
+        return mm.deserializeOr(raw, mm.deserialize(PLAYER_HEAD_DISPLAYNAME.getStringValue()));
+    }
+
+    public String getPlayerHeadTexture() {
+        return manager.getStringValue(PLAYER_HEAD_TEXTURE);
     }
 }

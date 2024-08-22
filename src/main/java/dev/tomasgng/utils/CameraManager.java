@@ -1,5 +1,7 @@
 package dev.tomasgng.utils;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import dev.tomasgng.Camera;
 import dev.tomasgng.config.ConfigDataProvider;
 import dev.tomasgng.config.DataConfigManager;
@@ -8,12 +10,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CameraManager {
@@ -31,13 +33,11 @@ public class CameraManager {
     private boolean cameraTitleAlreadyShown;
 
     public CameraManager() {
-        switchTime = config.getCameraSwitchTime();
-        cameras.addAll(data.getCameras());
-
-        startCameraSwitchTimer();
+        reload();
     }
 
     private void reload() {
+        message.setLanguageFileName(config.getLanguageFileName());
         switchTime = config.getCameraSwitchTime();
         cameras.clear();
         cameras.addAll(data.getCameras());
@@ -140,19 +140,21 @@ public class CameraManager {
 
         if(playersInCameraMode.contains(target.getName())) {
             target.setGameMode(GameMode.SURVIVAL);
-            target.setInvulnerable(false);
+            target.setInvisible(false);
             target.setInvulnerable(false);
             target.setFlying(false);
+            target.getEquipment().setHelmet(null, true);
             playersInCameraMode.remove(target.getName());
 
             player.sendMessage(message.getCameraToggledOff(player.getName()));
             return;
         }
 
-        target.setGameMode(GameMode.SPECTATOR);
-        target.setInvulnerable(true);
+        target.setGameMode(GameMode.CREATIVE);
+        target.setInvisible(false);
         target.setInvulnerable(true);
         target.setFlying(true);
+        target.getEquipment().setHelmet(getHead(), true);
         playersInCameraMode.add(target.getName());
 
         CameraInstance camera = cameras.toArray(new CameraInstance[0])[0];
@@ -160,6 +162,21 @@ public class CameraManager {
         player.teleport(camera.location());
         player.showTitle(Title.title(camera.title(), Component.empty()));
         player.sendMessage(message.getCameraToggledOn(player.getName()));
+    }
+
+    private ItemStack getHead() {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+
+        profile.setProperty(new ProfileProperty("textures", config.getPlayerHeadTexture()));
+
+        meta.displayName(config.getPlayerHeadDisplayname());
+        meta.setPlayerProfile(profile);
+
+        item.setItemMeta(meta);
+
+        return item;
     }
 
     public List<Integer> getCameraIds() {

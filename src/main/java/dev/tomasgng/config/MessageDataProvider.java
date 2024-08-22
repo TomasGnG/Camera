@@ -94,6 +94,10 @@ public class MessageDataProvider {
         return msg;
     }
 
+    public void setLanguageFileName(String name) {
+        manager.setLanguageFile(name);
+    }
+
     private Component replacePlaceholder(Component msg, String placeholder, Object value) {
         return mm.deserialize(mm.serialize(msg).replaceAll(placeholder, value.toString()));
     }
