@@ -43,6 +43,7 @@ public class MessageDataProvider {
     public Component getCameraToggledOff(String player) {
         return replacePlaceholder(manager.getComponentValue(CAMERA_TOGGLED_OFF), "%player%", player);
     }
+
     public Component getCameraListEntryFormatted(CameraInstance camera) {
         var formatted = replacePlaceholder(manager.getComponentValue(CAMERA_LIST_FORMAT), "%id%", camera.id());
 
@@ -57,6 +58,14 @@ public class MessageDataProvider {
 
     public Component getCameraListEmpty() {
         return manager.getComponentValue(CAMERA_LIST_EMPTY);
+    }
+
+    public Component getCameraViewModeToggledOn(int id) {
+        return replacePlaceholder(manager.getComponentValue(CAMERA_VIEWMODE_TOGGLED_ON), "%id%", id);
+    }
+
+    public Component getCameraViewModeToggledOff(int id) {
+        return replacePlaceholder(manager.getComponentValue(CAMERA_VIEWMODE_TOGGLED_OFF), "%id%", id);
     }
 
     public Component getCommandNoPermission() {

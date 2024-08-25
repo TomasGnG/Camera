@@ -15,6 +15,8 @@ public class MessagePathProvider {
     public static ConfigPair CAMERA_TOGGLED_OFF = new ConfigPair("camera.toggleOff", "<green>The camera mode is now deactivated for %player%");
     public static ConfigPair CAMERA_LIST_FORMAT = new ConfigPair("camera.listFormat", "<gray>[<green>Camera %id%<gray>] %world%(X: %x%, Y: %y%, Z: %z%), Title: %title%");
     public static ConfigPair CAMERA_LIST_EMPTY = new ConfigPair("camera.listEmpty", "<red>There are no cameras yet.");
+    public static ConfigPair CAMERA_VIEWMODE_TOGGLED_ON = new ConfigPair("camera.viewModeToggledOn", "<green>You are now viewing the camera %id%. Sneak to leave viewing.");
+    public static ConfigPair CAMERA_VIEWMODE_TOGGLED_OFF = new ConfigPair("camera.viewModeToggledOff", "<red>You left viewing the camera %id%");
     public static ConfigPair COMMAND_NO_PERMISSION = new ConfigPair("command.noPermission", "<red>You don't have permission!");
     public static ConfigPair COMMAND_RELOAD = new ConfigPair("command.reload", "<green>Reloaded config.");
     public static ConfigPair COMMAND_INVALID_ID = new ConfigPair("command.invalidId", "<red>The id must be a positive number.");
@@ -25,6 +27,7 @@ public class MessagePathProvider {
                                                                                    "<green>/camera delete <id> <gray>| Delete cameras",
                                                                                    "<green>/camera teleport <id> <gray>| Teleport to camera",
                                                                                    "<green>/camera toggle <player> <gray>| Toggles camera mode for player",
+                                                                                   "<green>/camera view <id> <gray>| View a camera",
                                                                                    "<green>/camera list <gray>| Show all cameras",
                                                                                    "<green>/camera reload <gray>| Reload config",
                                                                                    " "));

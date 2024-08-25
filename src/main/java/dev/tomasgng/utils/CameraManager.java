@@ -26,6 +26,7 @@ public class CameraManager {
 
     private final List<String> playersInCameraMode = new ArrayList<>();
     private final TreeSet<CameraInstance> cameras = new TreeSet<>(Comparator.comparing(CameraInstance::id));
+    private final List<PlayerCameraViewing> playersViewingCamera = new ArrayList<>();
 
     private int switchTime;
     private int currentIndex = 0;
@@ -111,7 +112,7 @@ public class CameraManager {
         player.sendMessage(message.getCameraTeleported(id));
     }
 
-    public void showCameras(Player player) {
+    public void listAllCameras(Player player) {
         reload();
 
         if(cameras.isEmpty()) {
@@ -144,17 +145,19 @@ public class CameraManager {
             target.setInvulnerable(false);
             target.setFlying(false);
             target.getEquipment().setHelmet(null, true);
+
             playersInCameraMode.remove(target.getName());
 
             player.sendMessage(message.getCameraToggledOff(player.getName()));
             return;
         }
 
-        target.setGameMode(GameMode.CREATIVE);
-        target.setInvisible(false);
+        target.setGameMode(config.getCameraModeGamemode());
+        target.setInvisible(true);
         target.setInvulnerable(true);
         target.setFlying(true);
         target.getEquipment().setHelmet(getHead(), true);
+
         playersInCameraMode.add(target.getName());
 
         CameraInstance camera = cameras.toArray(new CameraInstance[0])[0];
@@ -179,6 +182,41 @@ public class CameraManager {
         return item;
     }
 
+    public void toggleViewCamera(Player player, int id) {
+        if(isPlayerViewingCamera(player)) {
+            PlayerCameraViewing entry = playersViewingCamera.stream()
+                                                            .filter(x -> x.player().getName().equals(player.getName()))
+                                                            .findFirst()
+                                                            .get();
+
+            entry.rollback();
+            playersViewingCamera.remove(entry);
+            player.setGameMode(GameMode.SURVIVAL);
+            player.setInvisible(false);
+            player.setInvulnerable(false);
+            player.setFlying(false);
+
+            player.sendMessage(message.getCameraViewModeToggledOff(entry.cameraId()));
+            return;
+        }
+
+        if(!cameraExists(id)) {
+            player.sendMessage(message.getCameraNotExisting(id));
+            return;
+        }
+
+        PlayerCameraViewing cameraViewing = new PlayerCameraViewing(player, player.getLocation(), player.getInventory(), id);
+        playersViewingCamera.add(cameraViewing);
+
+        player.teleport(cameras.stream().filter(x -> x.id() == id).findFirst().get().location());
+        player.setGameMode(config.getCameraModeGamemode());
+        player.setInvisible(true);
+        player.setInvulnerable(true);
+        player.setFlying(true);
+
+        player.sendMessage(message.getCameraViewModeToggledOn(id));
+    }
+
     public List<Integer> getCameraIds() {
         return cameras.stream().map(CameraInstance::id).toList();
     }
@@ -186,6 +224,18 @@ public class CameraManager {
     public void reload(Player player) {
         reload();
         player.sendMessage(message.getCommandReload());
+    }
+
+    public boolean cameraExists(int id) {
+        return data.cameraExists(id);
+    }
+
+    public boolean isPlayerViewingCamera(Player player) {
+        return playersViewingCamera.stream().anyMatch(x -> x.player().getName().equals(player.getName()));
+    }
+
+    public boolean isPlayerInCameraMode(Player player) {
+        return playersInCameraMode.contains(player.getName());
     }
 
     private CameraInstance getNextCamera() {
@@ -199,9 +249,5 @@ public class CameraManager {
         currentIndex++;
 
         return camera;
-    }
-
-    public boolean cameraExists(int id) {
-        return data.cameraExists(id);
     }
 }

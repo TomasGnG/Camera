@@ -41,7 +41,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
             }
 
             if(args[0].equalsIgnoreCase("list")) {
-                cameraManager.showCameras(player);
+                cameraManager.listAllCameras(player);
                 return false;
             }
         }
@@ -76,6 +76,16 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
                 }
 
                 cameraManager.toggleCamera(player, target);
+                return false;
+            }
+
+            if(args[0].equalsIgnoreCase("view")) {
+                if(!isValidId(args[1])) {
+                    player.sendMessage(message.getCommandInvalidId());
+                    return false;
+                }
+
+                cameraManager.toggleViewCamera(player, Integer.parseInt(args[1]));
                 return false;
             }
         }
@@ -123,10 +133,10 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if(args.length == 1)
-            return List.of("create", "delete", "list", "teleport", "toggle", "reload");
+            return List.of("create", "delete", "list", "teleport", "toggle", "reload", "view");
 
         if(args.length == 2) {
-            if(args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("teleport"))
+            if(args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("teleport") || args[0].equalsIgnoreCase("view"))
                 return cameraManager.getCameraIds().stream().map(String::valueOf).toList();
 
             if(args[0].equalsIgnoreCase("toggle"))

@@ -3,6 +3,7 @@ package dev.tomasgng.config;
 import dev.tomasgng.Camera;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.GameMode;
 
 import static dev.tomasgng.config.ConfigPathProvider.*;
 
@@ -27,6 +28,17 @@ public class ConfigDataProvider {
 
     public String getLanguageFileName() {
         return manager.getStringValue(LANGUAGE_FILE);
+    }
+
+    public GameMode getCameraModeGamemode() {
+        String gamemodeStr = manager.getStringValue(CAMERA_MODE_GAMEMODE).toUpperCase();
+
+        try {
+            return GameMode.valueOf(gamemodeStr);
+        } catch (IllegalArgumentException e) {
+            Camera.getInstance().getLogger().severe(gamemodeStr + " is not a valid Gamemode! Using the default gamemode...");
+            return GameMode.valueOf(CAMERA_MODE_GAMEMODE.getStringValue());
+        }
     }
 
     public Component getPlayerHeadDisplayname() {
