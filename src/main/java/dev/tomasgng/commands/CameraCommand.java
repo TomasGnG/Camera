@@ -4,6 +4,7 @@ import dev.tomasgng.Camera;
 import dev.tomasgng.config.ConfigDataProvider;
 import dev.tomasgng.config.MessageDataProvider;
 import dev.tomasgng.utils.CameraManager;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -22,6 +23,8 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
     private final ConfigDataProvider config = Camera.getInstance().getConfigDataProvider();
     private final MessageDataProvider message = Camera.getInstance().getMessageDataProvider();
 
+    private final BukkitAudiences adventure = Camera.getInstance().getAdventure();
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
@@ -30,7 +33,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
         }
 
         if(!player.hasPermission(config.getCommandPermission())) {
-            player.sendMessage(message.getCommandNoPermission());
+            adventure.player(player).sendMessage(message.getCommandNoPermission());
             return false;
         }
 
@@ -49,7 +52,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
         if(args.length == 2) {
             if(args[0].equalsIgnoreCase("delete")) {
                 if(!isValidId(args[1])) {
-                    player.sendMessage(message.getCommandInvalidId());
+                    adventure.player(player).sendMessage(message.getCommandInvalidId());
                     return false;
                 }
 
@@ -59,7 +62,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
 
             if(args[0].equalsIgnoreCase("teleport")) {
                 if(!isValidId(args[1])) {
-                    player.sendMessage(message.getCommandInvalidId());
+                    adventure.player(player).sendMessage(message.getCommandInvalidId());
                     return false;
                 }
 
@@ -71,7 +74,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
                 Player target = Bukkit.getPlayer(args[1]);
 
                 if(target == null) {
-                    player.sendMessage(message.getCommandPlayerOffline());
+                    adventure.player(player).sendMessage(message.getCommandPlayerOffline());
                     return false;
                 }
 
@@ -81,7 +84,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
 
             if(args[0].equalsIgnoreCase("view")) {
                 if(!isValidId(args[1])) {
-                    player.sendMessage(message.getCommandInvalidId());
+                    adventure.player(player).sendMessage(message.getCommandInvalidId());
                     return false;
                 }
 
@@ -93,7 +96,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
         if(args.length > 2) {
             if(args[0].equalsIgnoreCase("create")) {
                 if(!isValidId(args[1])) {
-                    player.sendMessage(message.getCommandInvalidId());
+                    adventure.player(player).sendMessage(message.getCommandInvalidId());
                     return false;
                 }
 
@@ -108,7 +111,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
                 try {
                     title = MiniMessage.miniMessage().deserialize(rawTitle.toString().trim());
                 } catch (Exception e) {
-                    player.sendMessage(message.getCommandInvalidTitleFormat());
+                    adventure.player(player).sendMessage(message.getCommandInvalidTitleFormat());
                     return false;
                 }
 
@@ -117,7 +120,7 @@ public class CameraCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        player.sendMessage(message.getCommandHelp());
+        adventure.player(player).sendMessage(message.getCommandHelp());
         return false;
     }
 

@@ -1,12 +1,14 @@
 package dev.tomasgng.utils;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
-import com.destroystokyo.paper.profile.ProfileProperty;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import dev.tomasgng.Camera;
 import dev.tomasgng.config.ConfigDataProvider;
 import dev.tomasgng.config.DataConfigManager;
 import dev.tomasgng.config.MessageDataProvider;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -15,14 +17,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class CameraManager {
 
     private final MessageDataProvider message = Camera.getInstance().getMessageDataProvider();
     private final ConfigDataProvider config = Camera.getInstance().getConfigDataProvider();
     private final DataConfigManager data = Camera.getInstance().getDataConfigManager();
+    private final BukkitAudiences adventure = Camera.getInstance().getAdventure();
 
     private final List<String> playersInCameraMode = new ArrayList<>();
     private final TreeSet<CameraInstance> cameras = new TreeSet<>(Comparator.comparing(CameraInstance::id));
@@ -46,9 +49,9 @@ public class CameraManager {
     }
 
     private void startCameraSwitchTimer() {
-        Bukkit.getAsyncScheduler().cancelTasks(Camera.getInstance());
+        Bukkit.getScheduler().cancelTasks(Camera.getInstance());
 
-        Bukkit.getAsyncScheduler().runAtFixedRate(Camera.getInstance(), scheduledTask -> {
+        Bukkit.getScheduler().runTaskTimer(Camera.getInstance(), scheduledTask -> {
             playersInCameraMode.removeIf(name -> Bukkit.getPlayer(name) == null);
 
             if(cameras.isEmpty())
@@ -61,7 +64,7 @@ public class CameraManager {
                 if(cameras.size() == 1) {
                     if(!cameraTitleAlreadyShown) {
                         Bukkit.getScheduler().runTask(Camera.getInstance(), () -> player.teleport(camera.location()));
-                        player.showTitle(Title.title(camera.title(), Component.empty()));
+                        adventure.player(player).showTitle(Title.title(camera.title(), Component.empty()));
                         cameraTitleAlreadyShown = true;
                         continue;
                     }
@@ -70,14 +73,14 @@ public class CameraManager {
                 }
 
                 Bukkit.getScheduler().runTask(Camera.getInstance(), () -> player.teleport(camera.location()));
-                player.showTitle(Title.title(camera.title(), Component.empty()));
+                adventure.player(player).showTitle(Title.title(camera.title(), Component.empty()));
             }
-        }, 1, switchTime, TimeUnit.SECONDS);
+        }, 20, switchTime * 20);
     }
 
     public void createCamera(Player player, int id, Component title) {
         if(cameraExists(id)) {
-            player.sendMessage(message.getCameraExisting(id));
+            adventure.player(player).sendMessage(message.getCameraExisting(id));
             return;
         }
 
@@ -86,37 +89,37 @@ public class CameraManager {
         data.createCamera(cameraInstance);
         reload();
 
-        player.sendMessage(message.getCameraCreated(id));
+        adventure.player(player).sendMessage(message.getCameraCreated(id));
     }
 
     public void deleteCamera(Player player, int id) {
         if(!cameraExists(id)) {
-            player.sendMessage(message.getCameraNotExisting(id));
+            adventure.player(player).sendMessage(message.getCameraNotExisting(id));
             return;
         }
 
         data.deleteCamera(id);
         cameras.removeIf(x -> x.id() == id);
-        player.sendMessage(message.getCameraDeleted(id));
+        adventure.player(player).sendMessage(message.getCameraDeleted(id));
     }
 
     public void teleportCamera(Player player, int id) {
         if(!cameraExists(id)) {
-            player.sendMessage(message.getCameraNotExisting(id));
+            adventure.player(player).sendMessage(message.getCameraNotExisting(id));
             return;
         }
 
         CameraInstance cameraInstance = cameras.stream().filter(x -> x.id() == id).findFirst().orElse(null);
 
         player.teleport(cameraInstance.location());
-        player.sendMessage(message.getCameraTeleported(id));
+        adventure.player(player).sendMessage(message.getCameraTeleported(id));
     }
 
     public void listAllCameras(Player player) {
         reload();
 
         if(cameras.isEmpty()) {
-            player.sendMessage(message.getCameraListEmpty());
+            adventure.player(player).sendMessage(message.getCameraListEmpty());
             return;
         }
 
@@ -130,12 +133,12 @@ public class CameraManager {
             msg = msg.append(component).appendNewline();
         }
 
-        player.sendMessage(msg);
+        adventure.player(player).sendMessage(msg);
     }
 
     public void toggleCamera(Player player, Player target) {
         if(cameras.isEmpty()) {
-            player.sendMessage(message.getCameraListEmpty());
+            adventure.player(player).sendMessage(message.getCameraListEmpty());
             return;
         }
 
@@ -148,7 +151,7 @@ public class CameraManager {
 
             playersInCameraMode.remove(target.getName());
 
-            player.sendMessage(message.getCameraToggledOff(player.getName()));
+            adventure.player(player).sendMessage(message.getCameraToggledOff(player.getName()));
             return;
         }
 
@@ -163,19 +166,26 @@ public class CameraManager {
         CameraInstance camera = cameras.toArray(new CameraInstance[0])[0];
 
         player.teleport(camera.location());
-        player.showTitle(Title.title(camera.title(), Component.empty()));
-        player.sendMessage(message.getCameraToggledOn(player.getName()));
+        adventure.player(player).showTitle(Title.title(camera.title(), Component.empty()));
+        adventure.player(player).sendMessage(message.getCameraToggledOn(player.getName()));
     }
 
     private ItemStack getHead() {
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) item.getItemMeta();
-        PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+        GameProfile profile = new GameProfile(UUID.randomUUID(), "");
 
-        profile.setProperty(new ProfileProperty("textures", config.getPlayerHeadTexture()));
+        profile.getProperties().put("textures", new Property("textures", config.getPlayerHeadTexture()));
 
-        meta.displayName(config.getPlayerHeadDisplayname());
-        meta.setPlayerProfile(profile);
+        try {
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        meta.setDisplayName(LegacyComponentSerializer.legacyAmpersand().serialize(config.getPlayerHeadDisplayname()));
 
         item.setItemMeta(meta);
 
@@ -196,12 +206,12 @@ public class CameraManager {
             player.setInvulnerable(false);
             player.setFlying(false);
 
-            player.sendMessage(message.getCameraViewModeToggledOff(entry.cameraId()));
+            adventure.player(player).sendMessage(message.getCameraViewModeToggledOff(entry.cameraId()));
             return;
         }
 
         if(!cameraExists(id)) {
-            player.sendMessage(message.getCameraNotExisting(id));
+            adventure.player(player).sendMessage(message.getCameraNotExisting(id));
             return;
         }
 
@@ -214,7 +224,7 @@ public class CameraManager {
         player.setInvulnerable(true);
         player.setFlying(true);
 
-        player.sendMessage(message.getCameraViewModeToggledOn(id));
+        adventure.player(player).sendMessage(message.getCameraViewModeToggledOn(id));
     }
 
     public List<Integer> getCameraIds() {
@@ -223,7 +233,7 @@ public class CameraManager {
 
     public void reload(Player player) {
         reload();
-        player.sendMessage(message.getCommandReload());
+        adventure.player(player).sendMessage(message.getCommandReload());
     }
 
     public boolean cameraExists(int id) {
